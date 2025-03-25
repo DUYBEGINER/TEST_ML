@@ -25,8 +25,12 @@ def generate_synthetic_data(n_samples):
         'ip_address': [generate_random_ip() for _ in range(n_samples)],
         'login_attempts': np.random.randint(1, 51, size=n_samples),  # Từ 1 đến 50
         'ip_reputation_score': np.random.uniform(0, 1, size=n_samples),  # Từ 0 đến 1
-        'num_unique_usernames': np.random.randint(1, 21, size=n_samples)  # Từ 1 đến 20
     })
+
+    # Tạo num_unique_usernames dựa trên login_attempts
+    synthetic_data['num_unique_usernames'] = synthetic_data['login_attempts'].apply(
+        lambda x: np.random.randint(1, min(x + 1, 21))  # Từ 1 đến min(login_attempts, 20)
+    )
 
     # Tạo failed_logins (phải nhỏ hơn hoặc bằng login_attempts)
     synthetic_data['failed_logins'] = synthetic_data.apply(
@@ -94,10 +98,16 @@ def generate_synthetic_data(n_samples):
             flip_indices = synthetic_data[mask].sample(n_to_flip).index
             synthetic_data.loc[flip_indices, 'attack_detected'] = 0
 
+    # Sắp xếp lại các cột theo đúng thứ tự (dựa trên yêu cầu trước đó)
+    synthetic_data = synthetic_data[[
+        'ip_address', 'login_attempts', 'ip_reputation_score', 'num_unique_usernames',
+        'failed_logins', 'min_time_between_attempts', 'attack_detected'
+    ]]
+
     return synthetic_data
 
 # Tạo 1,000,000 mẫu dữ liệu
-n_samples = 259200
+n_samples = 1000000
 synthetic_data = generate_synthetic_data(n_samples)
 
 # Kiểm tra dataset
